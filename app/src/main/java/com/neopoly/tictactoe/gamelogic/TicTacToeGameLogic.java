@@ -47,8 +47,6 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
     private int mWinableLinesCount;
     /** State of the current game round as returned by the last 'setFlagToField(field)'-call. */
     private int mWinner;
-    /** The count of allowed calls of the method 'setFlagToField(field)' in the current game. */
-    private int mFilledFieldsCount;
     /**
      * Switching between the constant of the first [FIRST_GAMER] and second gamer [SECOND_GAMER],
      * initialized with 'FIRST_GAMER', switching with a valid turn (to 'SECOND_GAMER' or back)
@@ -79,7 +77,6 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
         }
         mWinableLinesCount = GAME_LINES_COUNT;
         mWinner = 0;
-        mFilledFieldsCount = 0;
         mNextGamer = FIRST_GAMER;
     }
 
@@ -172,12 +169,17 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
 
         } else throw new GameOverException();
 
-        mWinner = result;
-        if (mWinner == 0) {
+        // If 'GAME_OVER'-value was added multiple times to the result, shrink it to a single one
+        if (result < GAME_OVER) {
+            result = GAME_OVER;
+        }
+
+        if (result == 0) {
             // The member variable 'mNextGamer' is only shifted if there is a next game round.
             mNextGamer = -(mNextGamer);
         }   // Otherwise 'mNextGamer' holds the winner or last manipulator of an ended game.
 
+        mWinner = result;
         return result;
     }
 
@@ -257,13 +259,6 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
             }
         } // ...otherwise return 'null'.
         return winLines;
-    }
-
-    @Override
-    public int getCurrentRound() {
-        // The current round of selection - beginning with '1' and reaching a maximum of '9' -
-        // is equal to the number of filled fields on the playing field increased by one.
-        return mFilledFieldsCount + 1;
     }
 
     @Override

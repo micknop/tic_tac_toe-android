@@ -89,13 +89,6 @@ public interface TicTacToeGameLogicInterface {
     public int[] getWinLines();
 
     /**
-     * Getter-method for the current round in this game - means the number of filled fields + 1.
-     *
-     * @return the current round in this game in the value range of [1-9].
-     */
-    public int getCurrentRound();
-
-    /**
      * Getter-method to extract the current state out of this game - represented by an integer array
      * containing nine values (each one from the range [-1, 0, +1]). The inner order begins in the
      * upper left corner of the underlying 3x3-matrix and continues line by line from left to right

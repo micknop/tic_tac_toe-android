@@ -58,8 +58,8 @@ public abstract class AbstractTicTacToeGameLogic implements TicTacToeGameLogicIn
                 && gameState[8] >= -1 && gameState[8] <= 1) {
 
             // Collect the indices of all fields flagged by the first an the second gamer
-            int[] fieldIndicesOfFirstGamer = new int[] {4};
-            int[] fieldIndicesOfSecondGamer = new int[] {4};
+            int[] fieldIndicesOfFirstGamer = new int[4];
+            int[] fieldIndicesOfSecondGamer = new int[4];
             int fieldCountOfFirstGamer = 0;
             int fieldCountOfSecondGamer = 0;
             int currentFieldValue;
