@@ -9,239 +9,161 @@ package com.neopoly.tictactoe.gamelogic;
  */
 public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
 
-    private static final int POSSIBLE_WIN_LINES_COUNT = 8;
+    /** The number of lines forming the playing field - each line is three fields long. */
+    private static final int GAME_LINES_COUNT = 8;
 
+    /** The index of the internal integer array holding a line's sum of all its three fields. */
     private static final int INDEX_SUM_OF_FIELD_VALUES = 3;
+    /** The index of the internal integer array holding a line's count of already filled fields. */
     private static final int INDEX_COUNT_FILLED_FIELDS = 4;
 
-    private int[] mRowHead;
-    private int[] mRowMiddle;
-    private int[] mRowBottom;
-    private int[] mColumnLeft;
-    private int[] mColumnMiddle;
-    private int[] mColumnRight;
-    private int[] mDiagonalInc;
-    private int[] mDiagonalDec;
-
-    private int mFilledFieldsCount;
-    private int mNextGamer;
-    private boolean[] mWinableLines;
-    private int mWinableLinesCount;
-    private int mWinner;
+    /**
+     * This two-dimensional integer array keeps one simple integer array entry per game line:
+     * int[lineIndex] = {firstFieldValue,           // 0
+     *                   secondFieldValue,          // 1
+     *                   thirdFieldValue,           // 2
+     *                   sumOfFlagValues,           // 3 [INDEX_SUM_OF_FIELD_VALUES]
+     *                   countOfFilledFields}       // 4 [INDEX_COUNT_FILLED_FIELDS]
+     * These eight integer arrays describe the whole state of the playing field. Each of them holds
+     * the values of three related fields of a possible 'win lines' - redundant with crossing 'win
+     * lines' for a more simple analysis of the current game situation (open game, game winner and
+     * impossible to win detection). To save calculation processes it additionally holds two integer
+     * values as metadata - the first [at INDEX_SUM_OF_FIELD_VALUES] stores the sum of all three
+     * field values and the second [at INDEX_COUNT_FILLED_FIELDS] counts the number of selected
+     * fields of this line.
+     */
+    private int[][] mGameLines;
+    /**
+     * This helper array is initialized with 'false' for all eight lines at each start of a new game
+     * and it marks the 'win lines' - one or two in number - reached in the last turn by the winner.
+     */
     private boolean[] mWinLines;
+    /**
+     * This helper array marks the lines which contain no mixed flags of both gamers and so could
+     * be won of at least one of them. It is initialized with 'true' for all eight lines at start.
+     */
+    private boolean[] mWinableLines;
+    /** The count of indices marked with 'true' in the helper array 'mWinableLines'. */
+    private int mWinableLinesCount;
+    /** State of the current game round as returned by the last 'setFlagToField(field)'-call. */
+    private int mWinner;
+    /** The count of allowed calls of the method 'setFlagToField(field)' in the current game. */
+    private int mFilledFieldsCount;
+    /**
+     * Switching between the constant of the first [FIRST_GAMER] and second gamer [SECOND_GAMER],
+     * initialized with 'FIRST_GAMER', switching with a valid turn (to 'SECOND_GAMER' or back)
+     * and in this way the variable always describes the gamer having the next field selection.
+     */
+    private int mNextGamer;
 
     public TicTacToeGameLogic() {
+
+        // Start a new game and let initialize the game state
+        // while creating a new object of this TicTacToe-game.
         startNewGame();
     }
 
     @Override
     public void startNewGame() {
 
-        mRowHead =      new int[]{0, 0, 0, 0, 0};
-        mRowMiddle =    new int[]{0, 0, 0, 0, 0};
-        mRowBottom =    new int[]{0, 0, 0, 0, 0};
-        mColumnLeft =   new int[]{0, 0, 0, 0, 0};
-        mColumnMiddle = new int[]{0, 0, 0, 0, 0};
-        mColumnRight =  new int[]{0, 0, 0, 0, 0};
-        mDiagonalInc =  new int[]{0, 0, 0, 0, 0};
-        mDiagonalDec =  new int[]{0, 0, 0, 0, 0};
+        // Initialize all member variables to start a new game.
 
+        mGameLines = new int[GAME_LINES_COUNT][];
+        mWinLines = new boolean[GAME_LINES_COUNT];
+        mWinableLines = new boolean[GAME_LINES_COUNT];
+
+        for (int line = 0; line < GAME_LINES_COUNT; line++) {
+            mGameLines[line] = new int[]{0, 0, 0, 0, 0};
+            mWinLines[line] = false;
+            mWinableLines[line] = true;
+        }
+        mWinableLinesCount = GAME_LINES_COUNT;
+        mWinner = 0;
         mFilledFieldsCount = 0;
         mNextGamer = FIRST_GAMER;
-
-        mWinableLines = new boolean[] {true, true, true, true, true, true, true, true};
-        mWinableLinesCount = POSSIBLE_WIN_LINES_COUNT;
-        mWinLines = new boolean[] {false, false, false, false, false, false, false, false};
-        mWinner = 0;
     }
 
     @Override
-    public int setSignToField(int field) throws IllegalFieldException, GameOverException {
-        int roundResult = 0;
-        // -2 :: double win of first gamer
-        // -1 :: normal win of first gamer
-        //  0 :: no winner for now (game not over)
-        // +1 :: normal win of second gamer
-        // +2 :: double win of second gamer
-        // GAME_OVER :: no winner possible any more
+    /*  The possible return values of the
+     * 'setFlagToField(field)'-method are:
+     *
+     *  0 :: no winner for now (game not over)
+     * -1 :: normal win of first gamer
+     * +1 :: normal win of second gamer
+     * -2 :: double win of first gamer
+     * +2 :: double win of second gamer
+     * GAME_OVER :: no winner possible anymore
+     */
+    public int setFlagToField(int field) throws IllegalFieldException, GameOverException {
 
+        int result = 0;
+
+        // Only set the flag to a field if the game is not already ended
         if (mWinner == 0) {
+
             switch (field) {
-                case 0 :                                                            //  0 | - | -
-                    if (mRowHead[0] == 0) {                                         // ---|---|---
-                        mRowHead[0] = mNextGamer;                                   //  | | \ |
-                        mColumnLeft[0] = mNextGamer;                                // ---|---|---
-                        mDiagonalDec[0] = mNextGamer;                               //  | |   | \
 
-                        mRowHead[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnLeft[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalDec[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-
-                        mRowHead[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnLeft[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalDec[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_HEAD);
-                        roundResult += checkLineForWin(COLUMN_LEFT);
-                        roundResult += checkLineForWin(DIAGONAL_DECREASING);
-
-                    } else throw new IllegalFieldException();
+                case 0 :   // field-index '0' influences the following three lines:    0 | - | -
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_HEAD, 0);                 //    | | \ |
+                    result += setFlagToFieldInLine(COLUMN_LEFT, 0);              //   ---|---|---
+                    result += setFlagToFieldInLine(DIAGONAL_DECREASING, 0);      //    | |   | \
                     break;
 
-                case 1 :                                                            //  - | 1 | -
-                    if (mRowHead[1] == 0) {                                         // ---|---|---
-                        mRowHead[1] = mNextGamer;                                   //    | | |
-                        mColumnMiddle[0] = mNextGamer;                              // ---|---|---
-                                                                                    //    | | |
-                        mRowHead[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
+                case 1 :   // field-index '1' influences the following two lines:      - | 1 | -
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_HEAD, 1);                 //      | | |
+                    result += setFlagToFieldInLine(COLUMN_MIDDLE, 0);            //   ---|---|---
+                    break;                                                       //      | | |
 
-                        mRowHead[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnMiddle[INDEX_COUNT_FILLED_FIELDS]++;
 
-                        roundResult += checkLineForWin(ROW_HEAD);
-                        roundResult += checkLineForWin(COLUMN_MIDDLE);
-
-                    } else throw new IllegalFieldException();
+                case 2 :   // field-index '2' influences the following three lines:    - | - | 2
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_HEAD, 2);                 //      | / | |
+                    result += setFlagToFieldInLine(COLUMN_RIGHT, 0);             //   ---|---|---
+                    result += setFlagToFieldInLine(DIAGONAL_INCREASING, 2);      //    / |   | |
                     break;
 
-                case 2 :                                                            //  - | - | 2
-                    if (mRowHead[2] == 0) {                                         // ---|---|---
-                        mRowHead[2] = mNextGamer;                                   //    | / | |
-                        mColumnRight[0] = mNextGamer;                               // ---|---|---
-                        mDiagonalInc[2] = mNextGamer;                               //  / |   | |
+                case 3 :   // field-index '3' influences the following two lines:      | |   |
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_MIDDLE, 0);               //    3 | - | -
+                    result += setFlagToFieldInLine(COLUMN_LEFT, 1);              //   ---|---|---
+                    break;                                                       //    | |   |
 
-                        mRowHead[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnRight[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalInc[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
 
-                        mRowHead[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnRight[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalInc[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_HEAD);
-                        roundResult += checkLineForWin(COLUMN_RIGHT);
-                        roundResult += checkLineForWin(DIAGONAL_INCREASING);
-
-                    } else throw new IllegalFieldException();
+                case 4 :   // field-index '4' influences the following four lines:     \ | | | /
+                    result += setFlagToFieldInLine(ROW_MIDDLE, 1);               //   ---|---|---
+                    result += setFlagToFieldInLine(COLUMN_MIDDLE, 1);            //    - | 4 | -
+                    result += setFlagToFieldInLine(DIAGONAL_INCREASING, 1);      //   ---|---|---
+                    result += setFlagToFieldInLine(DIAGONAL_DECREASING, 1);      //    / | | | \
                     break;
 
-                case 3 :                                                            //  | |   |
-                    if (mRowMiddle[0] == 0) {                                       // ---|---|---
-                        mRowMiddle[0] = mNextGamer;                                 //  3 | - | -
-                        mColumnLeft[1] = mNextGamer;                                // ---|---|---
-                                                                                    //  | |   |
-                        mRowMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnLeft[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
+                case 5 :   // field-index '5' influences the following two lines:        |   | |
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_MIDDLE, 2);               //    - | - | 5
+                    result += setFlagToFieldInLine(COLUMN_RIGHT, 1);             //   ---|---|---
+                    break;                                                       //      |   | |
 
-                        mRowMiddle[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnLeft[INDEX_COUNT_FILLED_FIELDS]++;
 
-                        roundResult += checkLineForWin(ROW_MIDDLE);
-                        roundResult += checkLineForWin(COLUMN_LEFT);
-
-                    } else throw new IllegalFieldException();
+                case 6 :   // field-index '6' influences the following three lines:    | |   | /
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_BOTTOM, 0);               //    | | / |
+                    result += setFlagToFieldInLine(COLUMN_LEFT, 2);              //   ---|---|---
+                    result += setFlagToFieldInLine(DIAGONAL_INCREASING, 0);      //    6 | - | -
                     break;
 
-                case 4 :                                                            //  \ | | | /
-                    if (mRowMiddle[1] == 0) {                                       // ---|---|---
-                        mRowMiddle[1] = mNextGamer;                                 //  - | 4 | -
-                        mColumnMiddle[1] = mNextGamer;                              // ---|---|---
-                        mDiagonalInc[1] = mNextGamer;                               //  / | | | \
-                        mDiagonalDec[1] = mNextGamer;
+                case 7 :   // field-index '7' influences the following two lines:        | | |
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_BOTTOM, 1);               //      | | |
+                    result += setFlagToFieldInLine(COLUMN_MIDDLE, 2);            //   ---|---|---
+                    break;                                                       //    - | 7 | -
 
-                        mRowMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalInc[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalDec[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
 
-                        mRowMiddle[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnMiddle[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalInc[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalDec[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_MIDDLE);
-                        roundResult += checkLineForWin(COLUMN_MIDDLE);
-                        roundResult += checkLineForWin(DIAGONAL_INCREASING);
-                        roundResult += checkLineForWin(DIAGONAL_DECREASING);
-
-                    } else throw new IllegalFieldException();
-                    break;
-
-                case 5 :                                                            //    |   | |
-                    if (mRowMiddle[2] == 0) {                                       // ---|---|---
-                        mRowMiddle[2] = mNextGamer;                                 //  - | - | 5
-                        mColumnRight[1] = mNextGamer;                               // ---|---|---
-                                                                                    //    |   | |
-                        mRowMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnRight[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-
-                        mRowMiddle[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnRight[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_MIDDLE);
-                        roundResult += checkLineForWin(COLUMN_RIGHT);
-
-                    } else throw new IllegalFieldException();
-                    break;
-
-                case 6 :                                                            //  | |   | /
-                    if (mRowBottom[0] == 0) {                                       // ---|---|---
-                        mRowBottom[0] = mNextGamer;                                 //  | | / |
-                        mColumnLeft[2] = mNextGamer;                                // ---|---|---
-                        mDiagonalInc[0] = mNextGamer;                               //  6 | - | -
-
-                        mRowBottom[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnLeft[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalInc[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-
-                        mRowBottom[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnLeft[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalInc[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_BOTTOM);
-                        roundResult += checkLineForWin(COLUMN_LEFT);
-                        roundResult += checkLineForWin(DIAGONAL_INCREASING);
-
-                    } else throw new IllegalFieldException();
-                    break;
-
-                case 7 :                                                            //    | | |
-                    if (mRowBottom[1] == 0) {                                       // ---|---|---
-                        mRowBottom[1] = mNextGamer;                                 //    | | |
-                        mColumnMiddle[2] = mNextGamer;                              // ---|---|---
-                                                                                    //  - | 7 | -
-                        mRowBottom[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnMiddle[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-
-                        mRowBottom[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnMiddle[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_BOTTOM);
-                        roundResult += checkLineForWin(COLUMN_MIDDLE);
-
-                    } else throw new IllegalFieldException();
-                    break;
-
-                case 8 :                                                            //  \ |   | |
-                    if (mRowBottom[2] == 0) {                                       // ---|---|---
-                        mRowBottom[2] = mNextGamer;                                 //    | \ | |
-                        mColumnRight[2] = mNextGamer;                               // ---|---|---
-                        mDiagonalDec[2] = mNextGamer;                               //  - | - | 8
-
-                        mRowBottom[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mColumnRight[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-                        mDiagonalDec[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
-
-                        mRowBottom[INDEX_COUNT_FILLED_FIELDS]++;
-                        mColumnRight[INDEX_COUNT_FILLED_FIELDS]++;
-                        mDiagonalDec[INDEX_COUNT_FILLED_FIELDS]++;
-
-                        roundResult += checkLineForWin(ROW_BOTTOM);
-                        roundResult += checkLineForWin(COLUMN_RIGHT);
-                        roundResult += checkLineForWin(DIAGONAL_DECREASING);
-
-                    } else throw new IllegalFieldException();
+                case 8 :   // field-index '8' influences the following three lines:    \ |   | |
+                                                                                 //   ---|---|---
+                    result += setFlagToFieldInLine(ROW_BOTTOM, 2);               //      | \ | |
+                    result += setFlagToFieldInLine(COLUMN_RIGHT, 2);             //   ---|---|---
+                    result += setFlagToFieldInLine(DIAGONAL_DECREASING, 2);      //    - | - | 8
                     break;
 
                 default:
@@ -250,118 +172,108 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
 
         } else throw new GameOverException();
 
-        mWinner = roundResult;
+        mWinner = result;
         if (mWinner == 0) {
+            // The member variable 'mNextGamer' is only shifted if there is a next game round.
             mNextGamer = -(mNextGamer);
-        }
-        return roundResult;
+        }   // Otherwise 'mNextGamer' holds the winner or last manipulator of an ended game.
+
+        return result;
     }
 
-    private int checkLineForWin(int line) throws IllegalArgumentException {
+    /**
+     * This helper method sets the flag of the current gamer to the received line at the declared
+     * index and updates the included metadata ('sum of field values' and 'filled fields count')
+     * as well as the 'win' possibilities associated with this current line.
+     *
+     * @param line the index of this game line as specified in the interface.
+     * @param fieldIndexInLine the index of the current field in this line.
+     * @return an integer value describing the changes in win possibilities.
+     * @throws IllegalFieldException if the declared field is not empty.
+     */
+    private int setFlagToFieldInLine(int line, int fieldIndexInLine) throws IllegalFieldException {
+
         int result = 0;
-        int[] checkedLine = null;
-        switch (line) {
-            case ROW_HEAD:
-                checkedLine = mRowHead;
-                break;
-            case ROW_MIDDLE:
-                checkedLine = mRowHead;
-                break;
-            case ROW_BOTTOM:
-                checkedLine = mRowHead;
-                break;
-            case COLUMN_LEFT:
-                checkedLine = mRowHead;
-                break;
-            case COLUMN_MIDDLE:
-                checkedLine = mRowHead;
-                break;
-            case COLUMN_RIGHT:
-                checkedLine = mRowHead;
-                break;
-            case DIAGONAL_INCREASING:
-                checkedLine = mRowHead;
-                break;
-            case DIAGONAL_DECREASING:
-                checkedLine = mRowHead;
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
-        if (checkedLine != null && mWinableLines[line]) {
-            switch (checkedLine[INDEX_COUNT_FILLED_FIELDS]) {
-                case 1:
-                    switch (checkedLine[INDEX_SUM_OF_FIELD_VALUES]) {
-                        case -1:
-                            // DO NOTHING HERE
-                            break;
-                        case 1:
-                            // DO NOTHING HERE
-                    }
-                    break;
-                case 2:
-                    switch (checkedLine[INDEX_SUM_OF_FIELD_VALUES]) {
-                        case -2:
-                            // DO NOTHING HERE
-                            break;
-                        case 0:
-                            mWinableLines[line] = false;
-                            mWinableLinesCount--;
-                            break;
-                        case 2:
-                            // DO NOTHING HERE
-                    }
-                    break;
-                case 3:
-                    switch (checkedLine[INDEX_SUM_OF_FIELD_VALUES]) {
-                        case -3:
-                            result = FIRST_GAMER;
-                            mWinLines[line] = true;
-                            break;
-                        case -1:
-                            mWinableLines[line] = false;
-                            mWinableLinesCount--;
-                            break;
-                        case 1:
-                            mWinableLines[line] = false;
-                            mWinableLinesCount--;
-                            break;
-                        case 3:
-                            result = SECOND_GAMER;
-                            mWinLines[line] = true;
-                    }
-            }
-        }
+
+        // Pick the required line up
+        int[] gameLine = mGameLines[line];
+
+        // Check if the selected field is really empty
+        if (gameLine[fieldIndexInLine] == EMPTY_FIELD) {
+
+            // Flag the field in line and
+            // Update the 'sum of field values'
+            // as well as the 'filled fields count'
+            gameLine[fieldIndexInLine] = mNextGamer;
+            gameLine[INDEX_SUM_OF_FIELD_VALUES] += mNextGamer;
+            gameLine[INDEX_COUNT_FILLED_FIELDS]++;
+
+            // If the current line has been a possible 'win line' until now, this status must be updated:
+            if (mWinableLines[line]) {                                          //-----||-----|-----|-----||
+                                                                                //-----||  FILLED FIELDS  ||
+                if (gameLine[INDEX_SUM_OF_FIELD_VALUES] == (mNextGamer * 3)) {  //-----||-----|-----|-----||
+                                                                                // SUM ||  1  |  2  |  3  ||
+                    result = mNextGamer;                                        //-----||-----|-----|-----||
+                    mWinLines[line] = true;                                     //  -3  |  X  |  X  | WIN ||
+                                                                                //-----||-----|-----|-----||
+                } else if (gameLine[INDEX_COUNT_FILLED_FIELDS] == 3) {          //  -2  |  X  | NOT |  X  ||
+                                                                                //-----||-----|-----|-----||
+                    mWinableLines[line] = false;                                //  -1  | NOT |  X  | MIX ||
+                    mWinableLinesCount--;                                       //-----||-----|-----|-----||
+                                                                                //   0  |  X  | MIX |  X  ||---------------------------------
+                } else if (gameLine[INDEX_COUNT_FILLED_FIELDS] == 2             //-----||-----|-----|-----||  legend:                       |
+                        && gameLine[INDEX_SUM_OF_FIELD_VALUES] == 0) {          //  +1  | NOT |  X  | MIX ||---------------------------------
+                                                                                //-----||-----|-----|-----||   X  :: impossible combination |
+                    mWinableLines[line] = false;                                //  +2  |  X  | NOT |  X  ||  MIX ::  mixed flags in line   |
+                    mWinableLinesCount--;                                       //-----||-----|-----|-----||  NOT ::  gamer could win line  |
+                }                                                               //  +3  |  X  |  X  | WIN ||  WIN ::  gamer wins this line  |
+            }                                                                   //-----||-----|-----|-----||---------------------------------
+
+        } else throw new IllegalFieldException();
+
         return (result == 0 && mWinableLinesCount == 0)? GAME_OVER : result;
     }
 
     @Override
     public int[] getWinLines() {
+
         int[] winLines = null;
+
+        // Only if there is still a winner of the current game...
         if (mWinner != 0 && mWinner != GAME_OVER) {
+
             int indexInResultArray = 0;
             int numberOfWins = mWinner / mNextGamer;
-            winLines = new int[] {numberOfWins};
-            for (int line = 0; line < POSSIBLE_WIN_LINES_COUNT; line++) {
+
+            winLines = new int[numberOfWins];
+
+            // ...collect the indices of the reached 'win lines' - which could be one or two.
+            for (int line = 0; line < GAME_LINES_COUNT; line++) {
+
                 if (mWinLines[line]) {
                     winLines[indexInResultArray] = line;
                     indexInResultArray++;
                 }
             }
-        }
+        } // ...otherwise return 'null'.
         return winLines;
     }
 
     @Override
     public int getCurrentRound() {
+        // The current round of selection - beginning with '1' and reaching a maximum of '9' -
+        // is equal to the number of filled fields on the playing field increased by one.
         return mFilledFieldsCount + 1;
     }
 
     @Override
     public int[] getGameState() {
+        // As result of the redundant storage of field selection flags in eight game lines,
+        // it is sufficient to take only the values of three of these lines (here the rows)
+        // to represent the whole state of the current game in an array of nine integers.
         return new int[] {
-                mRowHead[0],   mRowHead[1],   mRowHead[2],
-                mRowMiddle[0], mRowMiddle[1], mRowMiddle[2],
-                mRowBottom[0], mRowBottom[1], mRowBottom[2]};
+                mGameLines[0][0], mGameLines[0][1], mGameLines[0][2],   // the values of head row
+                mGameLines[1][0], mGameLines[1][1], mGameLines[1][2],   // the values of middle row
+                mGameLines[2][0], mGameLines[2][1], mGameLines[2][2]};  // the values of bottom row
     }
 }

@@ -50,11 +50,11 @@ public interface TicTacToeGameLogicInterface {
     /** Return value describing that the game is over because there are no more winable lines. */
     public static final int GAME_OVER = -10;
 
-    /** This method clears all fields and starts a new game. */
+    /** This method clears all fields, initialize the game state and so starts a new game. */
     public void startNewGame();
 
     /**
-     * This method loads the already signed fields as specified in the given game state into the
+     * This method loads the already flagged fields as specified in the given game state into the
      * game logic. The state must be valid - means that the first gamer has the same number of
      * selected fields as the second gamer or one more and there must be open lines in which one or
      * both of the gamers can win the still open game.
@@ -77,7 +77,7 @@ public interface TicTacToeGameLogicInterface {
      * @throws IllegalFieldException if the selected field index does't point to an empty field.
      * @throws GameOverException if no more selections are possible because the game is still over.
      */
-    public int setSignToField(int field) throws IllegalFieldException, GameOverException;
+    public int setFlagToField(int field) throws IllegalFieldException, GameOverException;
 
     /**
      * Getter for the win line indices (length: 1 or 2) which represent some of the possible win
