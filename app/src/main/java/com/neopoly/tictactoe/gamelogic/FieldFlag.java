@@ -7,5 +7,5 @@ package com.neopoly.tictactoe.gamelogic;
 public enum FieldFlag {
     EMPTY_FIELD,
     FIRST_GAMERS_FLAG,
-    SECOND_GAMERS_FLAG;
+    SECOND_GAMERS_FLAG
 }

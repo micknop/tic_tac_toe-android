@@ -9,5 +9,5 @@ public enum GameState {
     GAME_OVER,
     WINNER_FIRST,
     WINNER_SECOND,
-    DOUBLE_WIN_FIRST;
+    DOUBLE_WIN_FIRST
 }

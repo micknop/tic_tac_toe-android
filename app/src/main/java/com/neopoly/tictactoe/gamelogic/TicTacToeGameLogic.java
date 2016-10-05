@@ -14,7 +14,7 @@ public class TicTacToeGameLogic extends AbstractTicTacToeGameLogic {
     /** The algebraic sign to declare the second gamer as field owner or game winner. */
     private static final int SECOND_GAMER = 1;
     /** The field value to describe an empty field. */
-    public static final int EMPTY_FIELD = 0;
+    private static final int EMPTY_FIELD = 0;
 
     /** The index of the internal integer array holding a line's sum of all its three fields. */
     private static final int INDEX_SUM_OF_FIELD_VALUES = 3;

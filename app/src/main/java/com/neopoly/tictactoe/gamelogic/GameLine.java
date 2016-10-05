@@ -47,10 +47,6 @@ public enum GameLine {
         mLocation = pLocation;
     }
 
-    int[] getLocation() {
-        return mLocation;
-    }
-
     int getIndexForField(int pFieldIndex) {
         return mLocation[pFieldIndex];
     }
