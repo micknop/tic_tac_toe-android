@@ -3,26 +3,34 @@ package com.neopoly.tictactoe.gamelogic;
 /**
  * This abstract game logic class for TicTacToe-games implements some comfort methods which can be
  * performed independent from any inner representations and computation steps of explicit game logic
- * classes. In detail this is validation and following loading of game states, as well as the
- * construction of a printable game state representation.
+ * classes. In detail this is validation and following loading of playing field states, as well as
+ * the construction of a printable game state representation.
  */
-public abstract class AbstractTicTacToeGameLogic implements TicTacToeGameLogicInterface {
+abstract class AbstractTicTacToeGameLogic implements TicTacToeGameLogicInterface {
 
     @Override
-    public String getPrintableGameState(Character firstGamer, Character secondGamer) {
+    public String getPrintablePlayingFieldState() {
+        return getPrintablePlayingFieldState(CHAR_GAMER_X, CHAR_GAMER_O);
+    }
 
-        Character[] usableChars = new Character[] {firstGamer, CHAR_EMPTY_FIELD, secondGamer};
-        Character[] fieldChars = new Character[TOTAL_FIELD_COUNT];
-        int[] gameState = getGameState();
+    @Override
+    public String getPrintablePlayingFieldState(char firstGamerChar, char secondGamerChar) {
 
-        // Translate the nine integer values of the game state array into a array of nine characters
+        char[] fieldChars = new char[TOTAL_FIELD_COUNT];
+        FieldFlag[] playingFieldState = getPlayingFieldState();
+
+        // Translate the game state's 'FieldFlag'-values into an array of nine characters
         for (int field = 0; field < TOTAL_FIELD_COUNT; field++) {
-            // ...by replacing:
-            // all '-1' with the delivered 'firstGamer'-Character,    // index '0' in 'usableChars'
-            // all '0' with the constant 'CHAR_EMPTY_FIELD' and       // index '1' in 'usableChars'
-            // all '+1' with the delivered 'secondGamer'-Character.   // index '2' in 'usableChars'
-            // ...meaning: 'field-value + 1' is index of each Character in the 'usableChars'-array
-            fieldChars[field] = usableChars[gameState[field] + 1];
+            switch (playingFieldState[field]) {
+                case EMPTY_FIELD:
+                    fieldChars[field] = CHAR_EMPTY_FIELD;
+                    break;
+                case FIRST_GAMERS_FLAG:
+                    fieldChars[field] = firstGamerChar;
+                    break;
+                case SECOND_GAMERS_FLAG:
+                    fieldChars[field] = secondGamerChar;
+            }
         }
 
         // The constructed printable game state looks like this:
@@ -41,63 +49,57 @@ public abstract class AbstractTicTacToeGameLogic implements TicTacToeGameLogicIn
     }
 
     @Override
-    public int startFromGameState(int[] gameState) throws IllegalGameStateException{
+    public FieldFlag initPlayingFieldState(FieldFlag[] playingFieldState)
+            throws NoInitialStateException{
 
-        int nextGamer = FIRST_GAMER;
+        FieldFlag nextGamer = FieldFlag.FIRST_GAMERS_FLAG;
         startNewGame();
 
-        if (gameState != null && gameState.length == TOTAL_FIELD_COUNT  // Check number of fields
-                && gameState[0] >= -1 && gameState[0] <= 1
-                && gameState[1] >= -1 && gameState[1] <= 1
-                && gameState[2] >= -1 && gameState[2] <= 1
-                && gameState[3] >= -1 && gameState[3] <= 1      // Check that each field's value
-                && gameState[4] >= -1 && gameState[4] <= 1      // equals one of the three values:
-                && gameState[5] >= -1 && gameState[5] <= 1      // '-1', '0' or '+1'
-                && gameState[6] >= -1 && gameState[6] <= 1
-                && gameState[7] >= -1 && gameState[7] <= 1
-                && gameState[8] >= -1 && gameState[8] <= 1) {
+        // Check number of fields
+        if (playingFieldState != null && playingFieldState.length == TOTAL_FIELD_COUNT) {
 
-            // Collect the indices of all fields flagged by the first an the second gamer
-            int[] fieldIndicesOfFirstGamer = new int[4];
-            int[] fieldIndicesOfSecondGamer = new int[4];
-            int fieldCountOfFirstGamer = 0;
-            int fieldCountOfSecondGamer = 0;
-            int currentFieldValue;
+            int[] flaggedByFirst = new int[4];  // max. 4 fields owned by first gamer in open games
+            int countFirstsFlags = 0;
+            int[] flaggedBySecond = new int[4]; // max. 4 fields owned by second gamer in open game
+            int countSecondsFlags = 0;
+
+            // Collect the indices of all fields flagged by the first or the second gamer
             for (int fieldIndex = 0; fieldIndex < TOTAL_FIELD_COUNT; fieldIndex++) {
-                currentFieldValue = gameState[fieldIndex];
-                if (currentFieldValue == FIRST_GAMER) {
-                    fieldIndicesOfFirstGamer[fieldCountOfFirstGamer] = fieldIndex;
-                    fieldCountOfFirstGamer++;
-                } else if (currentFieldValue == SECOND_GAMER) {
-                    fieldIndicesOfSecondGamer[fieldCountOfSecondGamer] = fieldIndex;
-                    fieldCountOfSecondGamer++;
+                switch (playingFieldState[fieldIndex]) {
+                    case FIRST_GAMERS_FLAG:
+                        flaggedByFirst[countFirstsFlags] = fieldIndex;
+                        countFirstsFlags++;
+                        break;
+                    case SECOND_GAMERS_FLAG:
+                        flaggedBySecond[countSecondsFlags] = fieldIndex;
+                        countSecondsFlags++;
                 }
             }
 
             // Check if the number of flagged fields is either equal or the first gamer has one more
-            if (fieldCountOfFirstGamer == fieldCountOfSecondGamer
-                    || fieldCountOfFirstGamer == (fieldCountOfSecondGamer + 1)) {
-                // Try to insert all flags into the new game - order is irrelevant for finally state
-                try {
-                    int returnValue = 0;
-                    for (int round = 0; round < fieldCountOfSecondGamer; round++) {
-                        setFlagToField(fieldIndicesOfFirstGamer[round]);
-                        returnValue = setFlagToField(fieldIndicesOfSecondGamer[round]);
-                    }
-                    if (fieldCountOfFirstGamer > fieldCountOfSecondGamer) {
-                        returnValue = setFlagToField(
-                                fieldIndicesOfFirstGamer[fieldCountOfFirstGamer - 1]);
-                        nextGamer = SECOND_GAMER;
-                    }
-                    if (returnValue != 0) {
-                        throw new IllegalGameStateException();
-                    }
-                } catch (Exception e) {
-                    throw new IllegalGameStateException();
-                }
-            } else throw new IllegalGameStateException();
+            if (countFirstsFlags == countSecondsFlags
+                    || countFirstsFlags == (countSecondsFlags + 1)) {
 
-        } else throw new IllegalGameStateException();
+                // Insert all flags into the new game - order is irrelevant for finally state
+                GameState currentGameState = GameState.OPEN;
+                for (int round = 0;
+                     currentGameState.equals(GameState.OPEN)
+                        && round < countSecondsFlags; round++) {
+
+                    setFlagToField(flaggedByFirst[round]);
+                    currentGameState = setFlagToField(flaggedBySecond[round]);
+                }
+                if (countFirstsFlags > countSecondsFlags) {
+                    nextGamer = FieldFlag.SECOND_GAMERS_FLAG;
+                    currentGameState = setFlagToField(flaggedByFirst[countFirstsFlags - 1]);
+                }
+
+                if (!currentGameState.equals(GameState.OPEN)) {
+                    throw new NoInitialStateException();
+                }
+            } else throw new NoInitialStateException();
+
+        } else throw new NoInitialStateException();
 
         return nextGamer;
     }

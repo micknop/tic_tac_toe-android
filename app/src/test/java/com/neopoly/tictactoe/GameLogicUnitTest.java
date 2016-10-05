@@ -1,5 +1,8 @@
 package com.neopoly.tictactoe;
 
+import com.neopoly.tictactoe.gamelogic.FieldFlag;
+import com.neopoly.tictactoe.gamelogic.GameLine;
+import com.neopoly.tictactoe.gamelogic.GameState;
 import com.neopoly.tictactoe.gamelogic.TicTacToeGameLogic;
 
 import org.junit.Test;
@@ -10,6 +13,13 @@ import static org.junit.Assert.*;
  * Test the TicTacToeGameLogic with some possible game sequences covering the important cases.
  */
 public class GameLogicUnitTest {
+
+    /**An abbreviated notation for 'FieldFlag.FIRST_GAMERS_FLAG'. */
+    private static final FieldFlag X = FieldFlag.FIRST_GAMERS_FLAG;
+    /**An abbreviated notation for 'FieldFlag.SECOND_GAMERS_FLAG'. */
+    private static final FieldFlag O = FieldFlag.SECOND_GAMERS_FLAG;
+    /**An abbreviated notation for 'FieldFlag.EMPTY_FIELD'. */
+    private static final FieldFlag E = FieldFlag.EMPTY_FIELD;
 
     @Test
     /**
@@ -27,51 +37,51 @@ public class GameLogicUnitTest {
     public void setFlagToField_doubleWin_isCorrect() throws Exception {
 
         TicTacToeGameLogic gameLogic = new TicTacToeGameLogic();
-        int[] expectedGameState = new int[] {0, 0, 0,                               // □|□|□
-                                             0, 0, 0,                               // □|□|□
-                                             0, 0, 0};                              // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
+        FieldFlag[] expectedPlayingFieldState = new FieldFlag[] {E, E, E,               // □|□|□
+                                                                 E, E, E,               // □|□|□
+                                                                 E, E, E};              // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
 
-        assertEquals(0, gameLogic.setFlagToField(0));                               // X|□|□
-        expectedGameState[0] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(0));                      // X|□|□
+        expectedPlayingFieldState[0] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(1));                               // X|O|□
-        expectedGameState[1] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(1));                      // X|O|□
+        expectedPlayingFieldState[1] = O;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(2));                               // X|O|X
-        expectedGameState[2] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(2));                      // X|O|X
+        expectedPlayingFieldState[2] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(5));                               // X|O|X
-        expectedGameState[5] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(5));                      // X|O|X
+        expectedPlayingFieldState[5] = O;                                               // □|□|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(8));                               // X|O|X
-        expectedGameState[8] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(8));                      // X|O|X
+        expectedPlayingFieldState[8] = X;                                               // □|□|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|X
 
-        assertEquals(0, gameLogic.setFlagToField(7));                               // X|O|X
-        expectedGameState[7] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|O|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(7));                      // X|O|X
+        expectedPlayingFieldState[7] = O;                                               // □|□|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|O|X
 
-        assertEquals(0, gameLogic.setFlagToField(6));                               // X|O|X
-        expectedGameState[6] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(6));                      // X|O|X
+        expectedPlayingFieldState[6] = X;                                               // □|□|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|X
 
-        assertEquals(0, gameLogic.setFlagToField(3));                               // X|O|X
-        expectedGameState[3] = TicTacToeGameLogic.SECOND_GAMER;                     // O|□|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(3));                      // X|O|X
+        expectedPlayingFieldState[3] = O;                                               // O|□|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|X
 
-        assertEquals(-2, gameLogic.setFlagToField(4));                              // X|O|X
-        expectedGameState[4] = TicTacToeGameLogic.FIRST_GAMER;                      // O|X|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|X
+        assertEquals(GameState.DOUBLE_WIN_FIRST, gameLogic.setFlagToField(4));          // X|O|X
+        expectedPlayingFieldState[4] = X;                                               // O|X|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|X
 
-        int[] winLines = gameLogic.getWinLines();
-        assertEquals(2, winLines.length);                                           // X| |X
-        assertEquals(TicTacToeGameLogic.DIAGONAL_INCREASING, winLines[0]);          //  |X|
-        assertEquals(TicTacToeGameLogic.DIAGONAL_DECREASING, winLines[1]);          // X| |X
+        GameLine[] winLines = gameLogic.getWinLines();
+        assertEquals(2, winLines.length);                                               // X| |X
+        assertEquals(GameLine.DIAGONAL_INCREASING, winLines[0]);                        //  |X|
+        assertEquals(GameLine.DIAGONAL_DECREASING, winLines[1]);                        // X| |X
     }
 
     @Test
@@ -86,37 +96,37 @@ public class GameLogicUnitTest {
      *
      * ...where 'X' is the first gamer and 'O' the second.
      */
-    public void setFlagToField_winFirstGamer_isCorrect() throws Exception {
+    public void setFlagToField_winnerFirst_isCorrect() throws Exception {
 
         TicTacToeGameLogic gameLogic = new TicTacToeGameLogic();
-        int[] expectedGameState = new int[] {0, 0, 0,                               // □|□|□
-                                             0, 0, 0,                               // □|□|□
-                                             0, 0, 0};                              // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
+        FieldFlag[] expectedPlayingFieldState = new FieldFlag[] {E, E, E,               // □|□|□
+                                                                 E, E, E,               // □|□|□
+                                                                 E, E, E};              // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
 
-        assertEquals(0, gameLogic.setFlagToField(8));                               // □|□|□
-        expectedGameState[8] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(8));                      // □|□|□
+        expectedPlayingFieldState[8] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|X
 
-        assertEquals(0, gameLogic.setFlagToField(0));                               // O|□|□
-        expectedGameState[0] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(0));                      // O|□|□
+        expectedPlayingFieldState[0] = O;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|X
 
-        assertEquals(0, gameLogic.setFlagToField(6));                               // O|□|□
-        expectedGameState[6] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(6));                      // O|□|□
+        expectedPlayingFieldState[6] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|X
 
-        assertEquals(0, gameLogic.setFlagToField(2));                               // O|□|O
-        expectedGameState[2] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|X
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(2));                      // O|□|O
+        expectedPlayingFieldState[2] = O;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|X
 
-        assertEquals(-1, gameLogic.setFlagToField(7));                              // O|□|O
-        expectedGameState[7] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|X|X
+        assertEquals(GameState.WINNER_FIRST, gameLogic.setFlagToField(7));              // O|□|O
+        expectedPlayingFieldState[7] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|X|X
 
-        int[] winLines = gameLogic.getWinLines();                                   //  | |
-        assertEquals(1, winLines.length);                                           //  | |
-        assertEquals(TicTacToeGameLogic.ROW_BOTTOM, winLines[0]);                   // X|X|X
+        GameLine[] winLines = gameLogic.getWinLines();                                  //  | |
+        assertEquals(1, winLines.length);                                               //  | |
+        assertEquals(GameLine.ROW_BOTTOM, winLines[0]);                                 // X|X|X
     }
 
     @Test
@@ -131,49 +141,49 @@ public class GameLogicUnitTest {
      *
      * ...where 'X' is the first gamer and 'O' the second.
      */
-    public void setFlagToField_winSecondGamer_isCorrect() throws Exception {
+    public void setFlagToField_winnerSecond_isCorrect() throws Exception {
 
         TicTacToeGameLogic gameLogic = new TicTacToeGameLogic();
-        int[] expectedGameState = new int[] {0, 0, 0,                               // □|□|□
-                                             0, 0, 0,                               // □|□|□
-                                             0, 0, 0};                              // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
+        FieldFlag[] expectedPlayingFieldState = new FieldFlag[] {E, E, E,               // □|□|□
+                                                                 E, E, E,               // □|□|□
+                                                                 E, E, E};              // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
 
-        assertEquals(0, gameLogic.setFlagToField(6));                               // □|□|□
-        expectedGameState[6] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(6));                      // □|□|□
+        expectedPlayingFieldState[6] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(2));                               // □|□|O
-        expectedGameState[2] = TicTacToeGameLogic.SECOND_GAMER;                     // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(2));                      // □|□|O
+        expectedPlayingFieldState[2] = O;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(0));                               // X|□|O
-        expectedGameState[0] = TicTacToeGameLogic.FIRST_GAMER;                      // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(0));                      // X|□|O
+        expectedPlayingFieldState[0] = X;                                               // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(3));                               // X|□|O
-        expectedGameState[3] = TicTacToeGameLogic.SECOND_GAMER;                     // O|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(3));                      // X|□|O
+        expectedPlayingFieldState[3] = O;                                               // O|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(4));                               // X|□|O
-        expectedGameState[4] = TicTacToeGameLogic.FIRST_GAMER;                      // O|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(4));                      // X|□|O
+        expectedPlayingFieldState[4] = X;                                               // O|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(8));                               // X|□|O
-        expectedGameState[8] = TicTacToeGameLogic.SECOND_GAMER;                     // O|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|O
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(8));                      // X|□|O
+        expectedPlayingFieldState[8] = O;                                               // O|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|O
 
-        assertEquals(0, gameLogic.setFlagToField(7));                               // X|□|O
-        expectedGameState[7] = TicTacToeGameLogic.FIRST_GAMER;                      // O|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|X|O
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(7));                      // X|□|O
+        expectedPlayingFieldState[7] = X;                                               // O|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|X|O
 
-        assertEquals(1, gameLogic.setFlagToField(5));                               // X|□|O
-        expectedGameState[5] = TicTacToeGameLogic.SECOND_GAMER;                     // O|X|O
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|X|O
+        assertEquals(GameState.WINNER_SECOND, gameLogic.setFlagToField(5));             // X|□|O
+        expectedPlayingFieldState[5] = O;                                               // O|X|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|X|O
 
-        int[] winLines = gameLogic.getWinLines();                                   //  | |O
-        assertEquals(1, winLines.length);                                           //  | |O
-        assertEquals(TicTacToeGameLogic.COLUMN_RIGHT, winLines[0]);                 //  | |O
+        GameLine[] winLines = gameLogic.getWinLines();                                  //  | |O
+        assertEquals(1, winLines.length);                                               //  | |O
+        assertEquals(GameLine.COLUMN_RIGHT, winLines[0]);                               //  | |O
     }
 
     @Test
@@ -191,49 +201,49 @@ public class GameLogicUnitTest {
     public void setFlagToField_gameOver_isCorrect() throws Exception {
 
         TicTacToeGameLogic gameLogic = new TicTacToeGameLogic();
-        int[] expectedGameState = new int[] {0, 0, 0,                               // □|□|□
-                                             0, 0, 0,                               // □|□|□
-                                             0, 0, 0};                              // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
+        FieldFlag[] expectedPlayingFieldState = new FieldFlag[] {E, E, E,               // □|□|□
+                                                                 E, E, E,               // □|□|□
+                                                                 E, E, E};              // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
 
-        assertEquals(0, gameLogic.setFlagToField(4));                               // □|□|□
-        expectedGameState[4] = TicTacToeGameLogic.FIRST_GAMER;                      // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(4));                      // □|□|□
+        expectedPlayingFieldState[4] = X;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(0));                               // O|□|□
-        expectedGameState[0] = TicTacToeGameLogic.SECOND_GAMER;                     // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // □|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(0));                      // O|□|□
+        expectedPlayingFieldState[0] = O;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // □|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(6));                               // O|□|□
-        expectedGameState[6] = TicTacToeGameLogic.FIRST_GAMER;                      // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(6));                      // O|□|□
+        expectedPlayingFieldState[6] = X;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(2));                               // O|□|O
-        expectedGameState[2] = TicTacToeGameLogic.SECOND_GAMER;                     // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(2));                      // O|□|O
+        expectedPlayingFieldState[2] = O;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(1));                               // O|X|O
-        expectedGameState[1] = TicTacToeGameLogic.FIRST_GAMER;                      // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|□|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(1));                      // O|X|O
+        expectedPlayingFieldState[1] = X;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|□|□
 
-        assertEquals(0, gameLogic.setFlagToField(7));                               // O|X|O
-        expectedGameState[7] = TicTacToeGameLogic.SECOND_GAMER;                     // □|X|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(7));                      // O|X|O
+        expectedPlayingFieldState[7] = O;                                               // □|X|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|□
 
-        assertEquals(0, gameLogic.setFlagToField(5));                               // O|X|O
-        expectedGameState[5] = TicTacToeGameLogic.FIRST_GAMER;                      // □|X|X
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|□
+        assertEquals(GameState.OPEN, gameLogic.setFlagToField(5));                      // O|X|O
+        expectedPlayingFieldState[5] = X;                                               // □|X|X
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|□
 
-        assertEquals(TicTacToeGameLogic.GAME_OVER, gameLogic.setFlagToField(3));    // O|X|O
-        expectedGameState[3] = TicTacToeGameLogic.SECOND_GAMER;                     // O|X|X
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());             // X|O|□
+        assertEquals(GameState.GAME_OVER, gameLogic.setFlagToField(3));                 // O|X|O
+        expectedPlayingFieldState[3] = O;                                               // O|X|X
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState()); // X|O|□
 
-        assertNull(gameLogic.getWinLines());                                // No 'win lines'
+        assertNull(gameLogic.getWinLines());                                    // No 'win lines'
     }
 
     @Test
     /**
-     * Test to load a game state and continue by setting the double win field for first gamer:
+     * Test to load a playing field state and continue setting the double win field for first gamer:
      *
      *    | X | X       X | X | X
      * ---|---|---     ---|---|---
@@ -245,32 +255,31 @@ public class GameLogicUnitTest {
      *
      * Additionally test the 'startNewGame()'-method if correct restarting the game.
      */
-    public void startFromGameState_and_startNewGame_isCorrect() throws Exception {
+    public void initPlayingFieldState_and_startNewGame_isCorrect() throws Exception {
 
         TicTacToeGameLogic gameLogic = new TicTacToeGameLogic();
-        int[] initGameState = new int[] { 0, -1, -1,                                // □|X|X
-                                         -1,  1,  1,                                // X|O|O
-                                         -1,  1,  1};                               // X|O|O
+        FieldFlag[] initialPlayingFieldState = new FieldFlag[] {E, X, X,                // □|X|X
+                                                                X, O, O,                // X|O|O
+                                                                X, O, O};               // X|O|O
+        assertEquals(FieldFlag.FIRST_GAMERS_FLAG, 
+                gameLogic.initPlayingFieldState(initialPlayingFieldState));
+        
+        assertEquals(GameState.DOUBLE_WIN_FIRST, gameLogic.setFlagToField(0));
+        FieldFlag[] expectedPlayingFieldState = new FieldFlag[] {X, X, X,               // X|X|X
+                                                                 X, O, O,               // X|O|O
+                                                                 X, O, O};              // X|O|O
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
 
-        assertEquals(TicTacToeGameLogic.FIRST_GAMER, gameLogic.startFromGameState(initGameState));
-
-        int[] expectedGameState = new int[] {-1, -1, -1,                            // X|X|X
-                                             -1,  1,  1,                            // X|O|O
-                                             -1,  1,  1};                           // X|O|O
-
-        assertEquals(-2, gameLogic.setFlagToField(0));
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
-
-        int[] winLines = gameLogic.getWinLines();
-        assertEquals(2, winLines.length);                                           // X|X|X
-        assertEquals(TicTacToeGameLogic.ROW_HEAD, winLines[0]);                     // X| |
-        assertEquals(TicTacToeGameLogic.COLUMN_LEFT, winLines[1]);                  // X| |
+        GameLine[] winLines = gameLogic.getWinLines();
+        assertEquals(2, winLines.length);                                               // X|X|X
+        assertEquals(GameLine.ROW_HEAD, winLines[0]);                                   // X| |
+        assertEquals(GameLine.COLUMN_LEFT, winLines[1]);                                // X| |
 
         // Test if the restart of a game works correct
         gameLogic.startNewGame();
-        expectedGameState = new int[] {0, 0, 0,                                     // □|□|□
-                                       0, 0, 0,                                     // □|□|□
-                                       0, 0, 0};                                    // □|□|□
-        assertArrayEquals(expectedGameState, gameLogic.getGameState());
+        expectedPlayingFieldState = new FieldFlag[] {E, E, E,                           // □|□|□
+                                                     E, E, E,                           // □|□|□
+                                                     E, E, E};                          // □|□|□
+        assertArrayEquals(expectedPlayingFieldState, gameLogic.getPlayingFieldState());
     }
 }
