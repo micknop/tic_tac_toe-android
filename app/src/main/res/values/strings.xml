@@ -1,3 +1,26 @@
 <resources>
-    <string name="app_name">Tic Tac Toe</string>
+    <string name="app_name">TicTacToe</string>
+    <string name="txt_gamer">Gamer</string>
+    <string name="flag_x">X</string>
+    <string name="flag_o">O</string>
+    <string name="txt_versus">vs.</string>
+    <string name="txt_headline_first_turn">First turn:</string>
+    <string name="rb_x_first">"Me!"</string>
+    <string name="rb_o_first">"You!"</string>
+    <string name="rb_random_first">randomize</string>
+    <string name="bt_start">Start</string>
+    <string name="bt_continue">Continue</string>
+    <string name="bt_discard">Discard</string>
+    <string name="txt_headline_game_score">Game-score:</string>
+    <string name="txt_round_count">(in %d rounds)</string>
+    <string name="txt_start_round">Start round %d...</string>
+    <string name="txt_title_quit_game">QUIT GAME</string>
+    <string name="txt_message_quit_game">This will discard the game-score!</string>
+    <string name="txt_title_quit_round">QUIT ROUND</string>
+    <string name="txt_message_quit_round">This will interrupt the current game round!</string>
+    <string name="txt_toast_game_over">GAME OVER</string>
+    <string name="txt_toast_suffix_win">" WINS!"</string>
+    <string name="txt_toast_suffix_double_win">" DOUBLE-WINS!!!"</string>
+
+    <string name="title_activity_playing_field">PlayingFieldActivity</string>
 </resources>

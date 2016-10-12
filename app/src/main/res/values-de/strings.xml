@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="txt_gamer">Spieler</string>
+    <string name="flag_x">X</string>
+    <string name="flag_o">O</string>
+    <string name="txt_versus">gegen</string>
+    <string name="txt_headline_first_turn">erster Zug:</string>
+    <string name="rb_x_first">"Ich!"</string>
+    <string name="rb_o_first">"Du!"</string>
+    <string name="rb_random_first">zufällig</string>
+    <string name="bt_start">Starten</string>
+    <string name="bt_continue">Fortsetzen</string>
+    <string name="bt_discard">Verwerfen</string>
+    <string name="txt_headline_game_score">Spielstand:</string>
+    <string name="txt_round_count">(in %d Runden)</string>
+    <string name="txt_start_round">Runde %d starten...</string>
+    <string name="txt_title_quit_game">SPIEL BEENDEN</string>
+    <string name="txt_message_quit_game">Der aktuelle Spielstand wird verworfen!</string>
+    <string name="txt_title_quit_round">RUNDE ABBRECHEN</string>
+    <string name="txt_message_quit_round">Die aktuelle Spielrunde wird verworfen!</string>
+    <string name="txt_toast_suffix_win">" gewinnt!"</string>
+    <string name="txt_toast_suffix_double_win">" gewinnt doppelt!!!"</string>
+</resources>
